@@ -10,7 +10,7 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=password
-      - MONGO_INITDB_DATABASE=gouser
+      - MONGO_INITDB_DATABASE=goecho
     volumes:
       - ./mongo-init/mongo-init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
       - mongo-data:/data/db
