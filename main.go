@@ -53,6 +53,7 @@ func main() {
 	e.GET("/activity/:activityid", activity.GetActivityByActivityIDHandler(activity.GetActivityByActivityID(mongodb)))
 	e.POST("/activity", activity.CreateActivityhandler(activity.CreateActivity(mongodb)))
 	e.PUT("/activity", activity.UpdateActivityHandler(activity.UpdateActivity(mongodb)))
+	e.DELETE("/activity/:activityid", activity.DeleteActivityHandler(activity.DeleteActivity(mongodb)))
 
 	go func() {
 		if err := e.Start(":8000"); err != nil {
