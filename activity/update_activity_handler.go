@@ -3,6 +3,7 @@ package activity
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -37,6 +38,7 @@ func UpdateActivityHandler(svc updateActivityFunc) echo.HandlerFunc {
 		}
 
 		activity := reqActivity.mapToActivity(startDate, endDate)
+		activity.SetUpdatedAt(time.Now())
 
 		err = svc.UpdateActivity(c.Request().Context(), activity)
 		if err != nil {
@@ -46,7 +48,7 @@ func UpdateActivityHandler(svc updateActivityFunc) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{
-			"message": "OK",
+			"message": "update successfully",
 		})
 
 	}
