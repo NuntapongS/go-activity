@@ -39,6 +39,30 @@ func GetActivityHandler(svc getActivityFunc) echo.HandlerFunc {
 			response = append(response, rs)
 		}
 		return c.JSON(http.StatusOK, response)
+	}
+}
 
+type getActivityByActivityID func(context.Context, string) (Activity, error)
+
+func (fn getActivityByActivityID) GetActivityByActivityID(ctx context.Context, ActivityID string) (Activity, error) {
+	return fn(ctx, ActivityID)
+}
+
+func GetActivityByActivityIDHandler(svc getActivityByActivityID) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		activityID := c.Param("activityid")
+
+		activity, err := svc.GetActivityByActivityID(c.Request().Context(), activityID)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"message": "error",
+			})
+		}
+
+		startDate := activity.StartDate
+		endDate := activity.EndDate
+		rs := activity.mapToActivityResponse(activity.DateToString(startDate), activity.DateToString(endDate))
+
+		return c.JSON(http.StatusOK, rs)
 	}
 }

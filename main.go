@@ -50,6 +50,7 @@ func main() {
 	})
 
 	e.GET("/activity", activity.GetActivityHandler(activity.GetActivity(mongodb)))
+	e.GET("/activity/:activityid", activity.GetActivityByActivityIDHandler(activity.GetActivityByActivityID(mongodb)))
 	e.POST("/activity", activity.CreateActivityhandler(activity.CreateActivity(mongodb)))
 
 	go func() {
