@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 	"myapp/activity"
+	"myapp/login"
+	"myapp/mw"
+
+	"myapp/staff"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,6 +16,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -26,8 +31,10 @@ func main() {
 	defer cancle()
 
 	credential := options.Credential{
-		Username: "root",
-		Password: "password",
+		AuthMechanism: "SCRAM-SHA-1",
+		AuthSource:    "goecho",
+		Username:      "root",
+		Password:      "password",
 	}
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017").SetAuth(credential))
@@ -41,19 +48,39 @@ func main() {
 		panic(err)
 	}
 
-	mongodb := client.Database("golang101")
+	mongodb := client.Database("goecho")
 
 	e := echo.New()
+	corsConfig := middleware.CORSConfig{
+		AllowHeaders:     []string{"*"},
+		AllowCredentials: true,
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+	}
+
+	e.Use(middleware.CORSWithConfig(corsConfig))
 
 	e.GET("/healths", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	e.GET("/activity", activity.GetActivityHandler(activity.GetActivity(mongodb)))
-	e.GET("/activity/:activityid", activity.GetActivityByActivityIDHandler(activity.GetActivityByActivityID(mongodb)))
-	e.POST("/activity", activity.CreateActivityhandler(activity.CreateActivity(mongodb)))
-	e.PUT("/activity", activity.UpdateActivityHandler(activity.UpdateActivity(mongodb)))
-	e.DELETE("/activity/:activityid", activity.DeleteActivityHandler(activity.DeleteActivity(mongodb)))
+	e.POST("/api/login", login.LoginHandler(staff.GetStaffByUsername(mongodb)))
+
+	a := e.Group("/api")
+	config := middleware.JWTConfig{
+		Claims:     &login.JwtCustomClaims{},
+		SigningKey: []byte(viper.GetString("jwt.secret")),
+	}
+
+	a.Use(middleware.JWTWithConfig(config))
+	onlyAdminRoutes := a.Group("")
+	onlyAdminRoutes.Use(mw.OnlyAdmin)
+
+	onlyAdminRoutes.GET("/activity", activity.GetActivityHandler(activity.GetActivity(mongodb)))
+	onlyAdminRoutes.GET("/activity/:activityid", activity.GetActivityByActivityIDHandler(activity.GetActivityByActivityID(mongodb)))
+	onlyAdminRoutes.POST("/activity", activity.CreateActivityhandler(activity.CreateActivity(mongodb)))
+	onlyAdminRoutes.PUT("/activity", activity.UpdateActivityHandler(activity.UpdateActivity(mongodb)))
+	onlyAdminRoutes.DELETE("/activity/:activityid", activity.DeleteActivityHandler(activity.DeleteActivity(mongodb)))
 
 	go func() {
 		if err := e.Start(":8000"); err != nil {
