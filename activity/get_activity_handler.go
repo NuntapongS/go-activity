@@ -2,6 +2,7 @@ package activity
 
 import (
 	"context"
+	"myapp/pagination"
 	"net/http"
 	"time"
 
@@ -16,29 +17,39 @@ func (act Activity) DateToString(date *time.Time) string {
 	return rs
 }
 
-type getActivityFunc func(context.Context) ([]Activity, error)
+type getActivityFunc func(context.Context, pagination.Pagination) ([]Activity, int64, error)
 
-func (fn getActivityFunc) GetActivity(ctx context.Context) ([]Activity, error) {
-	return fn(ctx)
+func (fn getActivityFunc) GetActivity(ctx context.Context, pag pagination.Pagination) ([]Activity, int64, error) {
+	return fn(ctx, pag)
 }
 
 func GetActivityHandler(svc getActivityFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		activities, err := svc.GetActivity(c.Request().Context())
+
+		pag := pagination.Pagination{
+			Search:     c.QueryParam("search"),
+			TargetDate: c.QueryParam("target_date"),
+			Type:       c.QueryParam("type"),
+			Sort:       c.QueryParam("sort"),
+			Direction:  c.QueryParam("direction"),
+			Page:       c.QueryParam("page"),
+			PageSize:   c.QueryParam("page_size"),
+			IsDownload: c.QueryParam("is_download") == "true",
+		}
+
+		activities, total, err := svc.GetActivity(c.Request().Context(), pag)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{
 				"message": "not found",
 			})
 		}
 
-		var response []ActivityResponse
-		for i := range activities {
-			startDate := activities[i].StartDate
-			endDate := activities[i].EndDate
-			rs := activities[i].mapToActivityResponse(activities[i].DateToString(startDate), activities[i].DateToString(endDate))
-			response = append(response, rs)
-		}
-		return c.JSON(http.StatusOK, response)
+		return c.JSON(http.StatusOK, Activities{
+			total,
+			int64(len(activities)),
+			pag.GetPage(),
+			activities,
+		})
 	}
 }
 

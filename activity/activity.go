@@ -19,6 +19,13 @@ type Activity struct {
 	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
+type Activities struct {
+	TotalRecords int64      `json:"total_records"`
+	Rows         int64      `json:"rows"`
+	Page         int64      `json:"page"`
+	Data         []Activity `json:"data"`
+}
+
 type ActivityRequest struct {
 	ActivityID string     `json:"activity_id,omitempty"`
 	Name       string     `json:"name"`
