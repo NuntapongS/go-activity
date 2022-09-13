@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/labstack/echo/v4 v4.8.0
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/viper v1.12.0
 	go.mongodb.org/mongo-driver v1.10.1
 	go.uber.org/zap v1.22.0

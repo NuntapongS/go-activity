@@ -3,6 +3,7 @@ package activity
 import (
 	"context"
 	"myapp/pagination"
+	"myapp/qrcode"
 	"net/http"
 	"time"
 
@@ -70,6 +71,9 @@ func GetActivityByActivityIDHandler(svc getActivityByActivityID) echo.HandlerFun
 			})
 		}
 
+		code, _ := qrcode.GenerateQrCode(activity)
+
+		activity.Url = code
 		startDate := activity.StartDate
 		endDate := activity.EndDate
 		rs := activity.mapToActivityResponse(activity.DateToString(startDate), activity.DateToString(endDate))

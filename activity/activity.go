@@ -15,6 +15,7 @@ type Activity struct {
 	EndDate    *time.Time         `bson:"end_date,omitempty" json:"end_date,omitempty"`
 	StartTime  string             `bosn:"start_time,omitempty" json:"start_time,omitempty"`
 	EndTime    string             `bson:"end_time,omitempty" json:"end_time,omitempty"`
+	Url        string             `bson:"url,omitempty" json:"url,omitempty"`
 	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
 }
